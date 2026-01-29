@@ -7,3 +7,5 @@ We guarantee a connection will be made by retrying with a recursive call to the 
 In production there would be a timeout and most likely a limit on retries on a speciic target.
 
 Using a random number based on the length of the address we may retry an endpoint more than once, but is a simpe round robin since we retry until a connection is made and never timeout.
+
+We can launch a go routing for each "App" and implement a wait group to keep the program running.
