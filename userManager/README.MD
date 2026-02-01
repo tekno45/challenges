@@ -4,7 +4,7 @@
 
 ### Part 1 Objective
 
-Build a RESTful API in Golang to manage users, using MongoDB for persistence, JWT for authentication, and adhering to clean code practices.
+Build a RESTful API in Golang to manage users, using PostgresDB for persistence, JWT for authentication, and adhering to clean code practices.
 
 ---
 
@@ -43,10 +43,10 @@ Implement the following operations:
 - Update a user's name or email.
 - Delete a user.
 
-#### 4. MongoDB Integration
+#### 4. PostgresDB Integration
 
-- Use the official Go MongoDB driver.
-- Persist and retrieve user data from MongoDB.
+- Use the official Go PostgresDB driver.
+- Persist and retrieve user data from PostgresDB.
 
 #### 5. Middleware
 
@@ -59,14 +59,14 @@ Implement the following operations:
 #### 7. Testing
 
 - Write unit tests using Go's standard `testing` package.
-- Mock MongoDB interactions where appropriate.
+- Mock PostgresDB interactions where appropriate.
 
 ---
 
 ### Bonus (Optional)
 
-- **Containerization**: Add Docker and `docker-compose` support for the API and MongoDB.
-- **Abstraction**: Use Go interfaces to abstract MongoDB operations for better testability.
+- **Containerization**: Add Docker and `docker-compose` support for the API and PostgresDB.
+- **Abstraction**: Use Go interfaces to abstract PostgresDB operations for better testability.
 - **Validation**: Implement input validation (e.g., required fields, email format).
 - **Graceful Shutdown**: Handle system signals using `context.Context`.
 - **gRPC Support**:
@@ -138,7 +138,7 @@ Provide a Git repository containing:
 - Code quality, structure, and readability.
 - Correctness and completeness of the REST API.
 - Security and implementation of JWT.
-- Proper usage and abstraction of MongoDB.
+- Proper usage and abstraction of PostgresDB.
 - Test coverage and effective mocking.
 - Idiomatic Go usage.
 - (Bonus) Implementation of gRPC, Docker, validation, and architecture.

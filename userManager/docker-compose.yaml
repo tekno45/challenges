@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:18 # Use a specific version, e.g., postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres 
+      POSTGRES_DB: users_challenge 
+    ports:
+      - "5432:5432" # Map the container's port 5432 to the host's port 5432
+    volumes:
+      - /data/postgres:/var/lib/postgresql # Persistent storage for database data
