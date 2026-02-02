@@ -28,6 +28,7 @@ func main() {
 	HandleNewUser := http.HandlerFunc(NewUserFunc(client))
 	mux.Handle("/register", AddLogging(HandleNewUser, Logger))
 	mux.Handle("/auth", AuthUserFunc(client, AddLogging(GetUserFunc(client), Logger)))
+	mux.Handle("/list", AuthUserFunc(client, AddLogging(ListUsersFunc(client), Logger)))
 	http.ListenAndServe("localhost:8080", mux)
 }
 
@@ -49,7 +50,7 @@ func NewUserFunc(db *pgx.Conn) http.HandlerFunc {
 		}
 		query := "INSERT into users (username, email, password) VALUES (@User, @Email,@Password)"
 		args := pgx.NamedArgs{
-			"User":     user.Name,
+			"User":     user.Username,
 			"Email":    user.Email,
 			"Password": GetMD5Hash(user.Password),
 		}
@@ -109,17 +110,39 @@ func GetUserFunc(db *pgx.Conn) http.HandlerFunc {
 }
 
 type User struct {
-	Name      string `json:"Username"`
-	ID        string `json:"ID,omitempty"`
-	Email     string `json:"Email"`
-	Password  string `json:"password,omitempty"`
-	CreatedAt string `json:"created,omitempty"`
+	Username  string    `json:"Username"`
+	ID        string    `json:"ID,omitempty"`
+	Email     string    `json:"Email"`
+	Password  string    `json:"password,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
 }
 
-func ListUsersFunc() {
+func ListUsersFunc(db *pgx.Conn) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		query := `select username,password,id,created_at,email from users`
+		results, err := db.Query(context.TODO(), query)
 
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		var users []User
+		users, err = pgx.CollectRows(results, pgx.RowToStructByName[User])
+
+		if err != nil {
+			fmt.Println(err.Error())
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		jsonPayload, _ := json.Marshal(users)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonPayload)
+	})
 }
-func AddLogging(h http.Handler, l *slog.Logger) http.Handler {
+
+func AddLogging(h http.Handler, l *slog.Logger, msgs ...string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		timeStart := time.Now()
@@ -127,6 +150,7 @@ func AddLogging(h http.Handler, l *slog.Logger) http.Handler {
 		l.Debug("Request Started", "time: ", timeStart)
 		defer func() { l.Info(r.URL.Path, "Elapsed: ", time.Since(timeStart).String()) }()
 		h.ServeHTTP(w, r)
+
 	})
 }
 
@@ -137,6 +161,5 @@ func RequireAdmin(h http.Handler) http.Handler {
 			http.Error(w, "Admin Permissions Required", http.StatusUnauthorized)
 		}
 		h.ServeHTTP(w, r)
-
 	})
 }
