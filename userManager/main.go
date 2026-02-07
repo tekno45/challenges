@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -71,7 +72,39 @@ func checkPassword(password string, expectedPassword string) bool {
 	return false
 }
 
-func AuthUserFunc(db *pgx.Conn, handeler http.Handler) http.HandlerFunc {
+func LoginUserFunc(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		username, _, ok := r.BasicAuth()
+		if ok {
+			token, err := CreateToken(username)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+			}
+			fmt.Fprint(w, token)
+		}
+		http.Error(w, "Unable to complete Login", 500)
+		return
+	})
+}
+
+var secretKey = []byte("secret")
+
+func CreateToken(username string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodES256,
+		jwt.MapClaims{
+			"username": username,
+			"exp":      time.Now().Add(time.Hour * 24).Unix(),
+		})
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+
+}
+
+func AuthUserFunc(db *pgx.Conn, handler http.Handler) http.HandlerFunc {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		username, password, ok := r.BasicAuth()
@@ -90,7 +123,9 @@ func AuthUserFunc(db *pgx.Conn, handeler http.Handler) http.HandlerFunc {
 		}
 
 		if checkPassword(password, expectedPassword) {
-			handeler.ServeHTTP(w, r)
+			handler.ServeHTTP(w, r)
+
+			fmt.Fprintf(w, tokenString)
 			return
 		}
 
